@@ -214,7 +214,6 @@ if prompt := st.chat_input("What are your fitness goals or what did you train to
             
             st.toast(f"Fetching real exercises for: {muscle}...", icon="🔍")
             
-            # This triggers the API and prints your Anatomy UI!
             api_data = fetch_exercises(muscle)
             
             temp_messages = st.session_state.messages.copy()
@@ -237,7 +236,6 @@ if prompt := st.chat_input("What are your fitness goals or what did you train to
             )
             final_response = st.write_stream(final_stream)
             
-            # We ONLY save the final, clean response to the permanent chat history
             st.session_state.messages.append({"role": "assistant", "content": final_response})
             
         else:
