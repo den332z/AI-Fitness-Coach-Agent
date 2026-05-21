@@ -217,9 +217,6 @@ if prompt := st.chat_input("What are your fitness goals or what did you train to
             # This triggers the API and prints your Anatomy UI!
             api_data = fetch_exercises(muscle)
             
-            # --- THE FIX: Temporary Memory for Instructions ---
-            # We create a temporary copy of the history just for this specific turn
-            # so the hidden instructions don't permanently pollute the chat log!
             temp_messages = st.session_state.messages.copy()
             temp_messages.append({"role": "assistant", "content": initial_response})
             
