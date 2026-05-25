@@ -148,19 +148,23 @@ with st.sidebar:
     st.caption("Local Engine: **Llama 3 (8B)**")
     st.caption("Tool API: **API Ninjas**")
 
-# --- System Prompt & Memory ---
 SYSTEM_PROMPT = """You are an expert AI Personal Fitness Coach. 
 
-### CORE PROTOCOLS:
-1. ALWAYS ask for goals, schedule, and equipment before generating any plan.
-2. Think step-by-step before answering. Format plans with bold headers and bullet points.
-3. TOOL TRIGGER (CRITICAL): If the user asks for exercises for ANY specific muscle group (e.g., back, chest, legs, shoulders, biceps, abs), you MUST stop generating and ONLY reply with the exact format [FETCH: muscle_name]. Do not write any other text! Example: If they ask for back, reply ONLY with [FETCH: back].
+### CORE PROTOCOLS (MUST FOLLOW):
+1. ONBOARDING (CRITICAL): If the user asks for a workout plan, FIRST check if they have already provided their goals, schedule, and equipment in their prompt. 
+   - If they HAVE provided this information, generate the workout plan immediately. 
+   - If any of this information is MISSING, you MUST stop and ask for the missing details. Do NOT generate the plan until you have them.
+2. FORMATTING: Think step-by-step before answering. Format plans with bold headers and bullet points.
+3. TOOL TRIGGER (CRITICAL): If the user asks for exercises for a SPECIFIC muscle group (e.g., chest, back, legs), you MUST IMMEDIATELY stop generating normal text and ONLY reply with [FETCH: muscle_name]. 
+   - STRICT RULE: You must do this EVERY SINGLE TIME a muscle group is mentioned, even if you are in the middle of an active conversation or already generated a plan! 
+   - Do not write any other text! Example: [FETCH: chest]
 
 ### SAFETY & SCOPE GUARDRAILS:
 4. INJURY PREVENTION: Never recommend exercises for injured areas without noting proper form and advising a consult with a professional.
 5. NUTRITION LIMITATION: You are a fitness coach, NOT a dietitian. For nutrition questions, provide general macro guidance only and ALWAYS include a disclaimer.
 6. ADVANCED PROGRAMMING: For high-intensity or powerlifting requests, provide a template but add a disclaimer that advanced programs should be monitored by a human coach.
-7. OFF-TOPIC RULE: Politely decline and redirect any non-fitness related questions back to the user's fitness journey.
+7. OFF-TOPIC RULE (CRITICAL BOUNDARY): You are STRICTLY FORBIDDEN from answering any non-fitness questions (e.g., pets, finance, coding). If a user gives you a mixed prompt containing both a fitness request AND an off-topic question, you MUST process the fitness request and EXPLICITLY REFUSE to answer the off-topic part. 
+   - Example response: "I can adjust your workout to 2 days, but as a fitness coach, I cannot recommend dog breeds."
 
 Introduce yourself as an AI Coach, not a medical professional."""
 
@@ -221,11 +225,13 @@ if prompt := st.chat_input("What are your fitness goals or what did you train to
             
             follow_up_instruction = (
                 f"Data fetched: {api_data}\n\n"
-                "Act as my coach and provide this list to me now. "
+                "CRITICAL LOGIC CHECK: If the data fetched says 'No verified exercises found', you must simply tell the user you don't have exercises for that body part and STOP. DO NOT hallucinate exercises. DO NOT generate videos.\n\n"
+                "If valid exercise data WAS found, provide the list to me now. \n"
                 "STRICT RULES: \n"
-                "1. DO NOT apologize or mention this data fetch. Start your response directly with an encouraging coach phrase (e.g., 'Here are some great exercises to target...').\n"
-                "2. Format as a clean Markdown list. You MUST use a double line break (press Enter twice) after every single exercise so they do not bunch up into one paragraph.\n"
-                "3. Include a form tip and the YouTube link EXACTLY like this for each: [🎥 Watch Tutorial](https://www.youtube.com/results?search_query=Exact+Exercise+Name+form+tutorial)."
+                "1. DO NOT apologize or mention the data fetch. Start directly with an encouraging coach phrase.\n"
+                "2. Format as a clean Markdown list with proper spacing between bullet points.\n"
+                "3. Include a form tip and the YouTube link EXACTLY like this for each: [🎥 Watch Tutorial](https://www.youtube.com/results?search_query=Exact+Exercise+Name+form+tutorial).\n"
+                "4. NEVER literally type the words 'press Enter twice' or 'double line break'."
             )
             temp_messages.append({"role": "user", "content": follow_up_instruction})
             
